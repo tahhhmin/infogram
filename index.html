@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Instagram Profile Analyzer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .upload-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .upload-item label {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9em;
+    }
+
+    .upload-item input[type="file"] {
+      padding: 8px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      transition: all 0.3s ease;
+    }
+
+    .upload-item input[type="file"]:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    #processBtn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    #processBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #666;
+      border-radius: 10px 10px 0 0;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab.active {
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-box {
+      background: #f8faff;
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid #e1e8ff;
+    }
+
+    .counter {
+      font-weight: bold;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .user-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .user-item {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #e1e8ff;
+      transition: all 0.3s ease;
+    }
+
+    .user-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-item.checked {
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .user-item.checked .user-label {
+      text-decoration: line-through;
+    }
+
+    .user-label {
+      font-weight: 500;
+      color: #667eea;
+      cursor: pointer;
+      user-select: none;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .user-label:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #667eea;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 1.1em;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #e1e8ff;
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .date-info {
+      font-size: 0.8em;
+      color: #888;
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Instagram Profile Analyzer</h1>
+
+    <div class="upload-grid">
+      <div class="upload-item">
+        <label>Followers JSON:</label>
+        <input type="file" id="followersFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Following JSON:</label>
+        <input type="file" id="followingFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Blocked Profiles JSON (Optional):</label>
+        <input type="file" id="blockedFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Close Friends JSON (Optional):</label>
+        <input type="file" id="closeFriendsFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Pending Requests JSON (Optional):</label>
+        <input type="file" id="pendingFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Recent Follow Requests JSON (Optional):</label>
+        <input type="file" id="recentRequestsFile" accept=".json">
+      </div>
+      <div class="upload-item">
+        <label>Recently Unfollowed JSON (Optional):</label>
+        <input type="file" id="recentlyUnfollowedFile" accept=".json">
+      </div>
+    </div>
+
+    <button id="processBtn">Analyze Instagram Data</button>
+
+    <div id="results" style="display:none;">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="followersCount">0</div>
+          <div class="stat-label">Followers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="followingCount">0</div>
+          <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="nonFollowersCount">0</div>
+          <div class="stat-label">Don't Follow Back</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="blockedCount">0</div>
+          <div class="stat-label">Blocked</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="non-followers">Non-Followers</button>
+        <button class="tab" data-tab="blocked">Blocked Profiles</button>
+        <button class="tab" data-tab="close-friends">Close Friends</button>
+        <button class="tab" data-tab="pending">Pending Requests</button>
+        <button class="tab" data-tab="recent-requests">Recent Requests</button>
+        <button class="tab" data-tab="recently-unfollowed">Recently Unfollowed</button>
+      </div>
+
+      <div id="non-followers" class="tab-content active">
+        <div class="result-box">
+          <div class="counter" id="nonFollowersCounter">Remaining: 0</div>
+          <ul class="user-list" id="nonFollowersList"></ul>
+        </div>
+      </div>
+
+      <div id="blocked" class="tab-content">
+        <div class="result-box">
+          <div class="counter" id="blockedCounter">Total: 0</div>
+          <ul class="user-list" id="blockedList"></ul>
+        </div>
+      </div>
+
+      <div id="close-friends" class="tab-content">
+        <div class="result-box">
+          <div class="counter" id="closeFriendsCounter">Total: 0</div>
+          <ul class="user-list" id="closeFriendsList"></ul>
+        </div>
+      </div>
+
+      <div id="pending" class="tab-content">
+        <div class="result-box">
+          <div class="counter" id="pendingCounter">Total: 0</div>
+          <ul class="user-list" id="pendingList"></ul>
+        </div>
+      </div>
+
+      <div id="recent-requests" class="tab-content">
+        <div class="result-box">
+          <div class="counter" id="recentRequestsCounter">Total: 0</div>
+          <ul class="user-list" id="recentRequestsList"></ul>
+        </div>
+      </div>
+
+      <div id="recently-unfollowed" class="tab-content">
+        <div class="result-box">
+          <div class="counter" id="recentlyUnfollowedCounter">Total: 0</div>
+          <ul class="user-list" id="recentlyUnfollowedList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let analysisData = {};
+
+    // Tab switching
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.getAttribute('data-tab');
+          
+          tabs.forEach(t => t.classList.remove('active'));
+          contents.forEach(c => c.classList.remove('active'));
+          
+          tab.classList.add('active');
+          document.getElementById(targetTab).classList.add('active');
+        });
+      });
+    });
+
+    document.getElementById('processBtn').addEventListener('click', processFiles);
+
+    function parseUsernames(data, type) {
+      let list = [];
+      
+      try {
+        switch(type) {
+          case 'followers':
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                const username = item.string_list_data?.[0]?.value;
+                if (username) list.push(username);
+              });
+            }
+            break;
+            
+          case 'following':
+            const followingList = data.relationships_following || [];
+            followingList.forEach(item => {
+              const username = item.string_list_data?.[0]?.value;
+              if (username) list.push(username);
+            });
+            break;
+            
+          case 'blocked':
+            const blockedList = data.relationships_blocked_users || [];
+            blockedList.forEach(item => {
+              const username = item.string_list_data?.[0]?.value;
+              if (username) list.push(username);
+            });
+            break;
+            
+          case 'close_friends':
+            const closeFriendsList = data.relationships_close_friends || [];
+            closeFriendsList.forEach(item => {
+              const username = item.string_list_data?.[0]?.value;
+              if (username) list.push(username);
+            });
+            break;
+            
+          case 'pending':
+            const pendingList = data.relationships_follow_requests_sent || [];
+            pendingList.forEach(item => {
+              const username = item.string_list_data?.[0]?.value;
+              const timestamp = item.string_list_data?.[0]?.timestamp;
+              if (username) list.push({username, timestamp});
+            });
+            break;
+            
+          case 'recent_requests':
+            if (Array.isArray(data)) {
+              data.forEach(item => {
+                const username = item.string_list_data?.[0]?.value;
+                const timestamp = item.string_list_data?.[0]?.timestamp;
+                if (username) list.push({username, timestamp});
+              });
+            }
+            break;
+            
+          case 'recently_unfollowed':
+            const unfollowedList = data.relationships_unfollowed_users || [];
+            unfollowedList.forEach(item => {
+              const username = item.string_list_data?.[0]?.value;
+              const timestamp = item.string_list_data?.[0]?.timestamp;
+              if (username) list.push({username, timestamp});
+            });
+            break;
+        }
+      } catch (error) {
+        console.warn(`Error parsing ${type}:`, error);
+      }
+      
+      return list;
+    }
+
+    async function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            resolve(JSON.parse(e.target.result));
+          } catch (err) {
+            reject(err);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
+    }
+
+    async function processFiles() {
+      const files = {
+        followers: document.getElementById('followersFile').files[0],
+        following: document.getElementById('followingFile').files[0],
+        blocked: document.getElementById('blockedFile').files[0],
+        closeFriends: document.getElementById('closeFriendsFile').files[0],
+        pending: document.getElementById('pendingFile').files[0],
+        recentRequests: document.getElementById('recentRequestsFile').files[0],
+        recentlyUnfollowed: document.getElementById('recentlyUnfollowedFile').files[0]
+      };
+
+      if (!files.followers || !files.following) {
+        alert("Please upload at least the followers and following JSON files.");
+        return;
+      }
+
+      try {
+        // Process required files
+        const followersData = await readFile(files.followers);
+        const followingData = await readFile(files.following);
+        
+        analysisData.followers = parseUsernames(followersData, 'followers');
+        analysisData.following = parseUsernames(followingData, 'following');
+        
+        // Process optional files
+        if (files.blocked) {
+          const blockedData = await readFile(files.blocked);
+          analysisData.blocked = parseUsernames(blockedData, 'blocked');
+        }
+        
+        if (files.closeFriends) {
+          const closeFriendsData = await readFile(files.closeFriends);
+          analysisData.closeFriends = parseUsernames(closeFriendsData, 'close_friends');
+        }
+        
+        if (files.pending) {
+          const pendingData = await readFile(files.pending);
+          analysisData.pending = parseUsernames(pendingData, 'pending');
+        }
+        
+        if (files.recentRequests) {
+          const recentRequestsData = await readFile(files.recentRequests);
+          analysisData.recentRequests = parseUsernames(recentRequestsData, 'recent_requests');
+        }
+        
+        if (files.recentlyUnfollowed) {
+          const recentlyUnfollowedData = await readFile(files.recentlyUnfollowed);
+          analysisData.recentlyUnfollowed = parseUsernames(recentlyUnfollowedData, 'recently_unfollowed');
+        }
+
+        displayResults();
+        
+      } catch (error) {
+        alert("Error processing files: " + error.message);
+      }
+    }
+
+    function displayResults() {
+      // Calculate non-followers
+      analysisData.nonFollowers = analysisData.following.filter(user => 
+        !analysisData.followers.includes(user)
+      );
+
+      // Update stats
+      document.getElementById('followersCount').textContent = analysisData.followers.length;
+      document.getElementById('followingCount').textContent = analysisData.following.length;
+      document.getElementById('nonFollowersCount').textContent = analysisData.nonFollowers.length;
+      document.getElementById('blockedCount').textContent = (analysisData.blocked || []).length;
+
+      // Display each section
+      displayNonFollowers();
+      displayBlocked();
+      displayCloseFriends();
+      displayPending();
+      displayRecentRequests();
+      displayRecentlyUnfollowed();
+
+      document.getElementById('results').style.display = 'block';
+    }
+
+    function displayNonFollowers() {
+      const list = document.getElementById('nonFollowersList');
+      const counter = document.getElementById('nonFollowersCounter');
+      
+      if (analysisData.nonFollowers.length === 0) {
+        list.innerHTML = '<div class="empty-message">Everyone you follow follows you back! 🎉</div>';
+        counter.textContent = '';
+        return;
+      }
+
+      list.innerHTML = '';
+      analysisData.nonFollowers.forEach(username => {
+        const li = createUserItem(username, 'non-followers');
+        list.appendChild(li);
+      });
+
+      updateNonFollowersCounter();
+    }
+
+    function displayBlocked() {
+      const list = document.getElementById('blockedList');
+      const counter = document.getElementById('blockedCounter');
+      const blocked = analysisData.blocked || [];
+      
+      counter.textContent = `Total: ${blocked.length}`;
+      
+      if (blocked.length === 0) {
+        list.innerHTML = '<div class="empty-message">No blocked profiles found.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      blocked.forEach(username => {
+        const li = createUserItem(username, 'blocked');
+        list.appendChild(li);
+      });
+    }
+
+    function displayCloseFriends() {
+      const list = document.getElementById('closeFriendsList');
+      const counter = document.getElementById('closeFriendsCounter');
+      const closeFriends = analysisData.closeFriends || [];
+      
+      counter.textContent = `Total: ${closeFriends.length}`;
+      
+      if (closeFriends.length === 0) {
+        list.innerHTML = '<div class="empty-message">No close friends data found.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      closeFriends.forEach(username => {
+        const li = createUserItem(username, 'close-friends');
+        list.appendChild(li);
+      });
+    }
+
+    function displayPending() {
+      const list = document.getElementById('pendingList');
+      const counter = document.getElementById('pendingCounter');
+      const pending = analysisData.pending || [];
+      
+      counter.textContent = `Total: ${pending.length}`;
+      
+      if (pending.length === 0) {
+        list.innerHTML = '<div class="empty-message">No pending follow requests found.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      pending.forEach(item => {
+        const li = createUserItem(item, 'pending');
+        list.appendChild(li);
+      });
+    }
+
+    function displayRecentRequests() {
+      const list = document.getElementById('recentRequestsList');
+      const counter = document.getElementById('recentRequestsCounter');
+      const recentRequests = analysisData.recentRequests || [];
+      
+      counter.textContent = `Total: ${recentRequests.length}`;
+      
+      if (recentRequests.length === 0) {
+        list.innerHTML = '<div class="empty-message">No recent follow requests found.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      recentRequests.forEach(item => {
+        const li = createUserItem(item, 'recent-requests');
+        list.appendChild(li);
+      });
+    }
+
+    function displayRecentlyUnfollowed() {
+      const list = document.getElementById('recentlyUnfollowedList');
+      const counter = document.getElementById('recentlyUnfollowedCounter');
+      const recentlyUnfollowed = analysisData.recentlyUnfollowed || [];
+      
+      counter.textContent = `Total: ${recentlyUnfollowed.length}`;
+      
+      if (recentlyUnfollowed.length === 0) {
+        list.innerHTML = '<div class="empty-message">No recently unfollowed profiles found.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      recentlyUnfollowed.forEach(item => {
+        const li = createUserItem(item, 'recently-unfollowed');
+        list.appendChild(li);
+      });
+    }
+
+    function createUserItem(userData, type) {
+      const li = document.createElement('li');
+      li.className = 'user-item';
+      
+      const username = typeof userData === 'string' ? userData : userData.username;
+      const timestamp = typeof userData === 'object' ? userData.timestamp : null;
+      
+      if (type === 'non-followers') {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'checkbox';
+        
+        checkbox.addEventListener('change', () => {
+          li.classList.toggle('checked', checkbox.checked);
+          updateNonFollowersCounter();
+        });
+        
+        li.appendChild(checkbox);
+      }
+      
+      const link = document.createElement('a');
+      link.className = 'user-label';
+      link.href = `https://www.instagram.com/${username}/`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `@${username}`;
+      li.appendChild(link);
+      
+      if (timestamp) {
+        const dateInfo = document.createElement('span');
+        dateInfo.className = 'date-info';
+        dateInfo.textContent = new Date(timestamp * 1000).toLocaleDateString();
+        li.appendChild(dateInfo);
+      }
+      
+      return li;
+    }
+
+    function updateNonFollowersCounter() {
+      const total = document.querySelectorAll('#nonFollowersList .user-item').length;
+      const checked = document.querySelectorAll('#nonFollowersList .user-item.checked').length;
+      const remaining = total - checked;
+      document.getElementById('nonFollowersCounter').textContent = `Remaining: ${remaining}`;
+    }
+  </script>
+</body>
+</html>
